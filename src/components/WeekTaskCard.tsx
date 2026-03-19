@@ -75,7 +75,10 @@ const WeekTaskCard = memo<WeekTaskCardProps>(function WeekTaskCard({ task, dateI
 
         {/* Repeatable badge */}
         {task.repeatable && (
-          <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 border border-blue-800/50 leading-none">
+          <span
+            className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded leading-none"
+            style={{ backgroundColor: 'rgba(132, 177, 121, 0.2)', color: 'var(--accent-pale)', borderWidth: '1px', borderColor: 'rgba(132, 177, 121, 0.25)' }}
+          >
             repeat
           </span>
         )}

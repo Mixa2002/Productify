@@ -42,9 +42,10 @@ const HabitRow = memo<HabitRowProps>(function HabitRow({ habit, todayISO, onTogg
     <li
       className={`group flex items-center gap-3 p-3 rounded-lg border transition-colors hover-lift ${
         isDone
-          ? 'border-l-green-500 border-l-[3px] border-y-gray-700 border-r-gray-700 bg-green-950/20'
+          ? 'border-y-gray-700 border-r-gray-700'
           : 'border-gray-700 bg-gray-900'
       }`}
+      style={isDone ? { borderLeftWidth: '3px', borderLeftColor: 'var(--accent)', backgroundColor: 'rgba(132, 177, 121, 0.08)' } : undefined}
     >
       {/* Toggle checkbox */}
       <button
@@ -55,9 +56,10 @@ const HabitRow = memo<HabitRowProps>(function HabitRow({ habit, todayISO, onTogg
         onClick={handleToggle}
         className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${bouncing ? 'animate-habit-bounce' : ''} ${
           isDone
-            ? 'bg-green-600 border-green-600 text-white'
+            ? 'text-white'
             : 'border-gray-500 hover:border-gray-300'
         }`}
+        style={isDone ? { backgroundColor: 'var(--accent)', borderColor: 'var(--accent)' } : undefined}
       >
         {isDone && (
           <svg
@@ -84,7 +86,7 @@ const HabitRow = memo<HabitRowProps>(function HabitRow({ habit, todayISO, onTogg
       </span>
 
       {/* Streak */}
-      <span className="text-xs text-gray-400 whitespace-nowrap streak-transition">
+      <span className="text-xs whitespace-nowrap streak-transition" style={{ color: 'var(--accent-light)' }}>
         {streak > 0 && (
           <>
             <span className="mr-0.5" role="img" aria-label="streak">
@@ -186,7 +188,10 @@ export default function HabitsPage() {
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="w-7 h-7 rounded-full bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-full text-white text-sm font-bold flex items-center justify-center transition-colors"
+            style={{ backgroundColor: 'var(--accent)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent-light)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent)')}
             aria-label="Add new habit"
           >
             +
@@ -260,9 +265,10 @@ export default function HabitsPage() {
                   <span
                     className={`text-[10px] mb-0.5 ${
                       isToday
-                        ? 'text-amber-400 font-semibold'
+                        ? 'font-semibold'
                         : 'text-gray-500'
                     }`}
+                    style={isToday ? { color: 'var(--accent-light)' } : undefined}
                   >
                     {entry.date.getDate()}
                   </span>

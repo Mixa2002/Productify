@@ -10,8 +10,8 @@ interface HabitProgressRingProps {
 function getRingColor(percentage: number): string {
   if (percentage <= 0) return '#6B7280';   // gray-500
   if (percentage < 50) return '#EF4444';   // red
-  if (percentage < 80) return '#F59E0B';   // amber
-  return '#22C55E';                         // green
+  if (percentage < 80) return '#A2CB8B';   // accent-light
+  return '#84B179';                         // accent
 }
 
 const HabitProgressRing = memo<HabitProgressRingProps>(({
@@ -63,7 +63,7 @@ const HabitProgressRing = memo<HabitProgressRingProps>(({
             strokeLinecap="round"
             style={{
               transition: 'stroke-dashoffset 0.3s ease-out',
-              ...(isFull ? { filter: 'drop-shadow(0 0 4px rgba(34, 197, 94, 0.5))' } : {}),
+              ...(isFull ? { filter: 'drop-shadow(0 0 4px rgba(132, 177, 121, 0.6))' } : {}),
             }}
           />
         )}

@@ -172,7 +172,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
               if (e.target.value.trim()) setTitleError('');
             }}
             placeholder="What do you need to do?"
-            className={`w-full px-3 py-2 rounded-lg bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
+            className={`w-full px-3 py-2 rounded-lg bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent)] ${
               titleError ? 'border-red-500' : 'border-gray-700'
             }`}
           />
@@ -188,7 +188,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
             <select
               value={hour}
               onChange={(e) => setHour(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+              className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-[var(--accent)]"
               aria-label="Hour"
             >
               {HOUR_OPTIONS.map((h) => (
@@ -201,7 +201,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
             <select
               value={minute}
               onChange={(e) => setMinute(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+              className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-[var(--accent)]"
               aria-label="Minute"
             >
               {MINUTE_OPTIONS.map((m) => (
@@ -224,7 +224,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
               <select
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+                className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-[var(--accent)]"
                 aria-label="Duration in minutes"
               >
                 {DURATION_PRESETS.map((d) => (
@@ -236,7 +236,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
               <button
                 type="button"
                 onClick={() => setUseCustomDuration(true)}
-                className="text-xs text-blue-400 hover:text-blue-300"
+                className="text-xs hover:opacity-80" style={{ color: 'var(--accent-light)' }}
               >
                 Custom
               </button>
@@ -253,7 +253,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
                 placeholder="Minutes"
                 min={5}
                 step={5}
-                className={`w-24 px-3 py-2 rounded-lg bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
+                className={`w-24 px-3 py-2 rounded-lg bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent)] ${
                   durationError ? 'border-red-500' : 'border-gray-700'
                 }`}
                 aria-label="Custom duration in minutes"
@@ -266,7 +266,7 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
                   setCustomDuration('');
                   setDurationError('');
                 }}
-                className="text-xs text-blue-400 hover:text-blue-300"
+                className="text-xs hover:opacity-80" style={{ color: 'var(--accent-light)' }}
               >
                 Presets
               </button>
@@ -315,8 +315,9 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
                 setRepeatDaysError('');
               }}
               className={`relative w-11 h-6 rounded-full transition-colors ${
-                repeatable ? 'bg-blue-600' : 'bg-gray-700'
+                repeatable ? '' : 'bg-gray-700'
               }`}
+              style={repeatable ? { backgroundColor: 'var(--accent)' } : undefined}
             >
               <span
                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
@@ -335,9 +336,10 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
                     onClick={() => toggleDay(day)}
                     className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                       repeatDays.includes(day)
-                        ? 'bg-blue-600 text-white'
+                        ? 'text-white'
                         : 'bg-gray-800 text-gray-400 hover:text-white'
                     }`}
+                    style={repeatDays.includes(day) ? { backgroundColor: 'var(--accent)' } : undefined}
                   >
                     {day}
                   </button>
@@ -355,7 +357,10 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: 'var(--accent)' }}
+          onMouseEnter={(e) => { if (!isSubmitting) e.currentTarget.style.backgroundColor = 'var(--accent-light)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--accent)'; }}
         >
           {isSubmitting ? 'Adding...' : 'Add Task'}
         </button>

@@ -91,7 +91,7 @@ export default function AddHabitModal({ isOpen, onClose }: AddHabitModalProps) {
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder="e.g. Read 30 minutes"
             autoFocus
-            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent)]"
           />
         </div>
 
@@ -99,7 +99,10 @@ export default function AddHabitModal({ isOpen, onClose }: AddHabitModalProps) {
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: 'var(--accent)' }}
+          onMouseEnter={(e) => { if (!isSubmitting) e.currentTarget.style.backgroundColor = 'var(--accent-light)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--accent)'; }}
         >
           {isSubmitting ? 'Adding...' : 'Add Habit'}
         </button>

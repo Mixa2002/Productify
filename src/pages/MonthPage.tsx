@@ -4,10 +4,18 @@ import {
   getCurrentMonthDates,
   getTasksForDate,
   formatDateISO,
+  formatTime,
   getTodayISO,
 } from '../utils';
 import TaskFormModal from '../components/TaskFormModal';
 import WeekTaskCard from '../components/WeekTaskCard';
+
+const MONTH_DETAIL_START = 360; // 6 AM
+const MONTH_DETAIL_END = 1320;  // 10 PM
+const MONTH_DETAIL_HOURS: number[] = [];
+for (let m = MONTH_DETAIL_START; m <= MONTH_DETAIL_END; m += 60) {
+  MONTH_DETAIL_HOURS.push(m);
+}
 
 const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
@@ -120,22 +128,28 @@ export default function MonthPage() {
                     w-8 h-8 flex items-center justify-center rounded-full text-sm transition-colors
                     ${!entry.isCurrentMonth ? 'text-gray-600 opacity-40' : ''}
                     ${entry.isCurrentMonth && !isToday && !isSelected ? 'text-gray-200' : ''}
-                    ${isToday && !isSelected ? 'ring-2 ring-amber-500 text-amber-400 font-semibold' : ''}
-                    ${isSelected ? 'bg-amber-600 text-white font-semibold' : ''}
-                    ${isToday && isSelected ? 'bg-amber-600 ring-2 ring-amber-400 text-white font-semibold' : ''}
+                    ${isToday && !isSelected ? 'ring-2 font-semibold' : ''}
+                    ${isSelected && !isToday ? 'text-white font-semibold' : ''}
+                    ${isToday && isSelected ? 'ring-2 text-white font-semibold' : ''}
                   `}
+                  style={{
+                    ...(isToday && !isSelected ? { ringColor: 'var(--accent)', color: 'var(--accent)', boxShadow: '0 0 0 2px var(--accent)' } : {}),
+                    ...(isSelected ? { backgroundColor: 'var(--accent)' } : {}),
+                    ...(isToday && isSelected ? { boxShadow: '0 0 0 2px var(--accent-light)', backgroundColor: 'var(--accent)' } : {}),
+                  }}
                 >
                   {entry.date.getDate()}
                 </span>
                 {/* Task indicator dot */}
                 <span
-                  className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
-                    hasTasks && entry.isCurrentMonth
-                      ? 'bg-blue-400'
+                  className="w-1.5 h-1.5 rounded-full mt-0.5"
+                  style={{
+                    backgroundColor: hasTasks && entry.isCurrentMonth
+                      ? 'var(--accent-light)'
                       : hasTasks && !entry.isCurrentMonth
-                        ? 'bg-blue-400/30'
-                        : 'bg-transparent'
-                  }`}
+                        ? 'rgba(162, 203, 139, 0.3)'
+                        : 'transparent',
+                  }}
                 />
               </button>
             );
@@ -153,35 +167,49 @@ export default function MonthPage() {
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="w-7 h-7 rounded-full bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-full text-white text-sm font-bold flex items-center justify-center transition-colors"
+            style={{ backgroundColor: 'var(--accent)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent-light)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent)')}
             aria-label="Add task for selected day"
           >
             +
           </button>
         </div>
 
-        {/* Task list */}
+        {/* Mini time grid for selected day */}
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {selectedDayTasks.length === 0 ? (
-            <div className="flex flex-col items-center mt-6 opacity-60">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-gray-600 mb-2" aria-hidden="true">
-                <rect x="4" y="6" width="24" height="22" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M4 12h24" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M10 3v5M22 3v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              <p className="text-center text-sm text-gray-600">
-                No tasks for this day
-              </p>
+          <div className="relative">
+            {/* Hour slot rows */}
+            {MONTH_DETAIL_HOURS.map((minute) => (
+              <div key={minute} className="flex items-start" style={{ height: '28px' }}>
+                <span className="text-[10px] text-gray-600 w-12 shrink-0 select-none leading-none pt-0.5">
+                  {formatTime(minute)}
+                </span>
+                <div className="flex-1 border-t border-gray-800/50" />
+              </div>
+            ))}
+
+            {/* Task cards positioned over the time grid */}
+            <div className="absolute top-0 left-12 right-0">
+              {selectedDayTasks.map((task) => {
+                const slotOffset = Math.max(0, task.startTime - MONTH_DETAIL_START);
+                const topPx = (slotOffset / 60) * 28;
+                return (
+                  <div key={`${task.id}-${selectedISO}`} className="absolute left-0 right-0" style={{ top: `${topPx}px` }}>
+                    <WeekTaskCard task={task} dateISO={selectedISO} />
+                  </div>
+                );
+              })}
             </div>
-          ) : (
-            selectedDayTasks.map((task) => (
-              <WeekTaskCard
-                key={`${task.id}-${selectedISO}`}
-                task={task}
-                dateISO={selectedISO}
-              />
-            ))
-          )}
+
+            {/* No tasks message */}
+            {selectedDayTasks.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <p className="text-sm text-gray-600 opacity-60">No tasks</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

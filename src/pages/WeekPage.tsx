@@ -5,10 +5,18 @@ import {
   getWeekDayName,
   getTasksForDate,
   formatDateISO,
+  formatTime,
   getTodayISO,
 } from '../utils';
 import TaskFormModal from '../components/TaskFormModal';
 import WeekTaskCard from '../components/WeekTaskCard';
+
+const WEEK_GRID_START = 360; // 6 AM in minutes
+const WEEK_GRID_END = 1320;  // 10 PM in minutes
+const WEEK_HOURS: number[] = [];
+for (let m = WEEK_GRID_START; m <= WEEK_GRID_END; m += 60) {
+  WEEK_HOURS.push(m);
+}
 
 const MONTH_NAMES_SHORT = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -83,29 +91,33 @@ export default function WeekPage() {
             return (
               <div
                 key={day.iso}
-                className={`flex flex-col ${isToday ? 'bg-amber-950/10 rounded-lg' : ''}`}
+                className={`flex flex-col ${isToday ? 'rounded-lg' : ''}`}
+                style={isToday ? { backgroundColor: 'rgba(132, 177, 121, 0.08)' } : undefined}
                 style={{ minWidth: '160px', width: '160px' }}
               >
                 {/* Column Header */}
                 <div
                   className={`flex items-center justify-between rounded-lg px-3 py-2 mb-2 ${
                     isToday
-                      ? 'bg-amber-900/30 border border-amber-600/60'
+                      ? 'border'
                       : 'bg-gray-800/60 border border-gray-700/40'
                   }`}
+                  style={isToday ? { backgroundColor: 'rgba(132, 177, 121, 0.15)', borderColor: 'rgba(132, 177, 121, 0.4)' } : undefined}
                 >
                   <div>
                     <span
                       className={`text-sm font-semibold ${
-                        isToday ? 'text-amber-300' : 'text-gray-300'
+                        isToday ? '' : 'text-gray-300'
                       }`}
+                      style={isToday ? { color: 'var(--accent-pale)' } : undefined}
                     >
                       {day.dayName}
                     </span>
                     <span
                       className={`ml-1.5 text-sm ${
-                        isToday ? 'text-amber-400 font-bold' : 'text-gray-400'
+                        isToday ? 'font-bold' : 'text-gray-400'
                       }`}
+                      style={isToday ? { color: 'var(--accent-light)' } : undefined}
                     >
                       {day.dayNumber}
                     </span>
@@ -113,39 +125,52 @@ export default function WeekPage() {
                   <button
                     type="button"
                     onClick={() => openModalForDate(day.iso)}
-                    className={`w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
+                    className="w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center transition-colors text-white"
+                    style={
                       isToday
-                        ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                    }`}
+                        ? { backgroundColor: 'var(--accent)' }
+                        : { backgroundColor: '#374151' }
+                    }
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = isToday ? 'var(--accent-light)' : '#4B5563')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = isToday ? 'var(--accent)' : '#374151')
+                    }
                     aria-label={`Add task for ${day.dayName} ${day.dayNumber}`}
                   >
                     +
                   </button>
                 </div>
 
-                {/* Tasks List */}
-                <div className="flex-1 overflow-y-auto pr-0.5">
-                  {day.tasks.length === 0 ? (
-                    <div className="flex flex-col items-center mt-4 opacity-60">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-gray-600 mb-1" aria-hidden="true">
-                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        <rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                      <p className="text-center text-sm text-gray-600">
-                        No tasks
-                      </p>
-                    </div>
-                  ) : (
-                    day.tasks.map((task) => (
+                {/* Tasks with hour markers */}
+                <div className="flex-1 overflow-y-auto pr-0.5 relative">
+                  {/* Hour marker lines */}
+                  {WEEK_HOURS.map((minute) => {
+                    const hourLabel = formatTime(minute);
+                    const showLabel = minute % 120 === 0; // label every 2 hours
+                    return (
+                      <div key={minute} className="flex items-center" style={{ height: '28px' }}>
+                        {showLabel && (
+                          <span className="text-[9px] text-gray-600 w-full text-center select-none leading-none">
+                            {hourLabel}
+                          </span>
+                        )}
+                        <div className="absolute left-0 right-0 border-t border-gray-800/40" style={{ pointerEvents: 'none' }} />
+                      </div>
+                    );
+                  })}
+
+                  {/* Task cards overlaid */}
+                  <div className="absolute inset-0 pt-0.5 overflow-y-auto">
+                    {day.tasks.map((task) => (
                       <WeekTaskCard
                         key={`${task.id}-${day.iso}`}
                         task={task}
                         dateISO={day.iso}
                       />
-                    ))
-                  )}
+                    ))}
+                  </div>
                 </div>
               </div>
             );

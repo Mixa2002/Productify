@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* --- Color palette (colorhunt.co greens) --- */
+:root {
+  --accent:       #84B179;
+  --accent-light: #A2CB8B;
+  --accent-pale:  #C7EABB;
+  --accent-tint:  #E8F5BD;
+}
+
 /* --- Modal animations --- */
 @keyframes slide-up {
   from {
