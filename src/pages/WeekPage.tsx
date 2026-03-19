@@ -1,66 +1,159 @@
+import { useState, useMemo } from 'react';
 import { useStore } from '../stores/useStore';
-import { getCurrentWeekDates, getWeekDayName, getHabitDayPercentage, formatDateISO } from '../utils';
+import {
+  getCurrentWeekDates,
+  getWeekDayName,
+  getTasksForDate,
+  formatDateISO,
+  getTodayISO,
+} from '../utils';
+import AddTaskModal from '../components/AddTaskModal';
+import WeekTaskCard from '../components/WeekTaskCard';
 
-function formatDateShort(date: Date): string {
-  return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+const MONTH_NAMES_SHORT = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+] as const;
+
+function formatWeekRange(dates: Date[]): string {
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  const startMonth = MONTH_NAMES_SHORT[first.getMonth()];
+  const endMonth = MONTH_NAMES_SHORT[last.getMonth()];
+  const startDay = first.getDate();
+  const endDay = last.getDate();
+  const year = last.getFullYear();
+
+  if (first.getMonth() === last.getMonth()) {
+    return `${startMonth} ${startDay} \u2013 ${endMonth} ${endDay}, ${year}`;
+  }
+  return `${startMonth} ${startDay} \u2013 ${endMonth} ${endDay}, ${year}`;
 }
 
 export default function WeekPage() {
-  const { habits, isLoading } = useStore();
-  const weekDates = getCurrentWeekDates();
+  const { tasks, isLoading } = useStore();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalDate, setModalDate] = useState<string | undefined>();
 
-  if (isLoading) return <div className="p-6 text-gray-400">Loading...</div>;
+  const weekDates = useMemo(() => getCurrentWeekDates(), []);
+  const todayISO = getTodayISO();
+
+  const tasksByDay = useMemo(() => {
+    return weekDates.map((date) => ({
+      date,
+      iso: formatDateISO(date),
+      dayName: getWeekDayName(date),
+      dayNumber: date.getDate(),
+      tasks: getTasksForDate(tasks, date).sort((a, b) => a.startTime - b.startTime),
+    }));
+  }, [tasks, weekDates]);
+
+  const openModalForDate = (iso: string) => {
+    setModalDate(iso);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalDate(undefined);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-400">
+        Loading...
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">This Week</h1>
+    <div className="flex flex-col h-[calc(100vh-49px)]">
+      {/* Header */}
+      <div className="px-6 pt-4 pb-3">
+        <h1 className="text-xl font-bold text-white">
+          {formatWeekRange(weekDates)}
+        </h1>
+      </div>
 
-      {habits.length === 0 ? (
-        <p className="text-gray-400">No habits to track.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th className="text-left p-2">Habit</th>
-                {weekDates.map((date, i) => (
-                  <th key={i} className="p-2 text-center">
-                    <div>{getWeekDayName(date)}</div>
-                    <div className="text-xs text-gray-400">{formatDateShort(date)}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {habits.map((habit) => (
-                <tr key={habit.id} className="border-t border-gray-200 dark:border-gray-700">
-                  <td className="p-2 font-medium">{habit.name}</td>
-                  {weekDates.map((date) => {
-                    const iso = formatDateISO(date);
-                    const done = habit.completions[iso] === true;
-                    return (
-                      <td key={iso} className="p-2 text-center">
-                        {done ? '\u2705' : '\u2796'}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              <tr className="border-t-2 border-gray-300 dark:border-gray-600">
-                <td className="p-2 font-medium text-gray-500">Completion</td>
-                {weekDates.map((date) => {
-                  const iso = formatDateISO(date);
-                  return (
-                    <td key={iso} className="p-2 text-center text-xs text-gray-500">
-                      {getHabitDayPercentage(habits, iso)}%
-                    </td>
-                  );
-                })}
-              </tr>
-            </tbody>
-          </table>
+      {/* Day Columns */}
+      <div className="flex-1 overflow-x-auto overscroll-contain px-4 pb-4">
+        <div className="flex gap-2 min-w-max h-full">
+          {tasksByDay.map((day) => {
+            const isToday = day.iso === todayISO;
+
+            return (
+              <div
+                key={day.iso}
+                className="flex flex-col"
+                style={{ minWidth: '160px', width: '160px' }}
+              >
+                {/* Column Header */}
+                <div
+                  className={`flex items-center justify-between rounded-lg px-3 py-2 mb-2 ${
+                    isToday
+                      ? 'bg-amber-900/30 border border-amber-600/60'
+                      : 'bg-gray-800/60 border border-gray-700/40'
+                  }`}
+                >
+                  <div>
+                    <span
+                      className={`text-sm font-semibold ${
+                        isToday ? 'text-amber-300' : 'text-gray-300'
+                      }`}
+                    >
+                      {day.dayName}
+                    </span>
+                    <span
+                      className={`ml-1.5 text-sm ${
+                        isToday ? 'text-amber-400 font-bold' : 'text-gray-400'
+                      }`}
+                    >
+                      {day.dayNumber}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openModalForDate(day.iso)}
+                    className={`w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
+                      isToday
+                        ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    }`}
+                    aria-label={`Add task for ${day.dayName} ${day.dayNumber}`}
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Tasks List */}
+                <div className="flex-1 overflow-y-auto pr-0.5">
+                  {day.tasks.length === 0 ? (
+                    <p className="text-center text-sm text-gray-600 mt-4 opacity-60">
+                      No tasks
+                    </p>
+                  ) : (
+                    day.tasks.map((task) => (
+                      <WeekTaskCard
+                        key={`${task.id}-${day.iso}`}
+                        task={task}
+                        dateISO={day.iso}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
+
+      {/* Add Task Modal */}
+      <AddTaskModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        initialDate={modalDate}
+        initialSource="week"
+      />
     </div>
   );
 }

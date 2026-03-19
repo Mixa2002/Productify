@@ -29,9 +29,11 @@ const MINUTE_OPTIONS = buildMinuteOptions();
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose(): void;
+  initialDate?: string;
+  initialSource?: 'day' | 'week' | 'month';
 }
 
-export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
+export default function AddTaskModal({ isOpen, onClose, initialDate, initialSource }: AddTaskModalProps) {
   const addTask = useStore((s) => s.addTask);
 
   const [title, setTitle] = useState('');
@@ -93,13 +95,13 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
     const startTime = hour * 60 + minute;
     await addTask({
       title: title.trim(),
-      date: getTodayISO(),
+      date: initialDate ?? getTodayISO(),
       startTime,
       duration: finalDuration,
       hardness,
       repeatable,
       repeatDays: repeatable ? repeatDays : [],
-      source: 'day',
+      source: initialSource ?? 'day',
     });
 
     handleClose();
