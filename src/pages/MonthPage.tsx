@@ -7,7 +7,7 @@ import {
   formatTime,
   getTodayISO,
 } from '../utils';
-import AddTaskModal from '../components/AddTaskModal';
+import TaskFormModal from '../components/TaskFormModal';
 import WeekTaskCard from '../components/WeekTaskCard';
 
 const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -180,11 +180,11 @@ export default function MonthPage() {
       </div>
 
       {/* Add Task Modal */}
-      <AddTaskModal
+      <TaskFormModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        initialDate={selectedISO}
-        initialSource="month"
+        defaultDate={selectedISO}
+        source="month"
       />
     </div>
   );

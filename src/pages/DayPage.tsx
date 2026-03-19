@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../stores/useStore.ts';
-import { getTasksForDate } from '../utils/index.ts';
+import { getTasksForDate, getTodayISO } from '../utils/index.ts';
 import TimeGrid from '../components/TimeGrid.tsx';
-import AddTaskModal from '../components/AddTaskModal.tsx';
+import TaskFormModal from '../components/TaskFormModal.tsx';
 
 const DAY_NAMES = [
   'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
@@ -63,7 +63,7 @@ export default function DayPage() {
       </button>
 
       {/* Add Task Modal */}
-      <AddTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <TaskFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} defaultDate={getTodayISO()} source="day" />
     </div>
   );
 }

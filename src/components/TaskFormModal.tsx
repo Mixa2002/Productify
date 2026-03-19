@@ -1,39 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useStore } from '../stores/useStore.ts';
-import { getTodayISO, formatTime } from '../utils/index.ts';
+import { formatTime } from '../utils/index.ts';
 
-const DURATION_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 90, 120];
+const DURATION_PRESETS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 90, 120];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 const GRID_START_HOUR = 6;
 const GRID_END_HOUR = 22;
 
-function buildHourOptions(): number[] {
-  const options: number[] = [];
-  for (let h = GRID_START_HOUR; h < GRID_END_HOUR; h++) {
-    options.push(h);
-  }
-  return options;
+const HOUR_OPTIONS: number[] = [];
+for (let h = GRID_START_HOUR; h < GRID_END_HOUR; h++) {
+  HOUR_OPTIONS.push(h);
 }
 
-function buildMinuteOptions(): number[] {
-  const options: number[] = [];
-  for (let m = 0; m < 60; m += 5) {
-    options.push(m);
-  }
-  return options;
+const MINUTE_OPTIONS: number[] = [];
+for (let m = 0; m < 60; m += 5) {
+  MINUTE_OPTIONS.push(m);
 }
 
-const HOUR_OPTIONS = buildHourOptions();
-const MINUTE_OPTIONS = buildMinuteOptions();
-
-interface AddTaskModalProps {
+interface TaskFormModalProps {
   isOpen: boolean;
-  onClose(): void;
-  initialDate?: string;
-  initialSource?: 'day' | 'week' | 'month';
+  onClose: () => void;
+  defaultDate: string;
+  source: 'day' | 'week' | 'month';
 }
 
-export default function AddTaskModal({ isOpen, onClose, initialDate, initialSource }: AddTaskModalProps) {
+export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: TaskFormModalProps) {
   const addTask = useStore((s) => s.addTask);
 
   const [title, setTitle] = useState('');
@@ -45,67 +36,87 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
   const [hardness, setHardness] = useState(3);
   const [repeatable, setRepeatable] = useState(false);
   const [repeatDays, setRepeatDays] = useState<string[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
 
-  const resetForm = useCallback(() => {
-    setTitle('');
-    setHour(9);
-    setMinute(0);
-    setDuration(30);
-    setCustomDuration('');
-    setUseCustomDuration(false);
-    setHardness(3);
-    setRepeatable(false);
-    setRepeatDays([]);
-    setErrors([]);
-  }, []);
+  const [titleError, setTitleError] = useState('');
+  const [durationError, setDurationError] = useState('');
+  const [repeatDaysError, setRepeatDaysError] = useState('');
 
-  const handleClose = useCallback(() => {
-    resetForm();
-    onClose();
-  }, [onClose, resetForm]);
+  // Reset all form fields when the modal opens (not on close, to avoid flicker)
+  useEffect(() => {
+    if (isOpen) {
+      setTitle('');
+      setHour(9);
+      setMinute(0);
+      setDuration(30);
+      setCustomDuration('');
+      setUseCustomDuration(false);
+      setHardness(3);
+      setRepeatable(false);
+      setRepeatDays([]);
+      setTitleError('');
+      setDurationError('');
+      setRepeatDaysError('');
+    }
+  }, [isOpen]);
 
   const toggleDay = useCallback((day: string) => {
     setRepeatDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
+    setRepeatDaysError('');
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    const validationErrors: string[] = [];
-    if (!title.trim()) validationErrors.push('Title is required');
-    if (repeatable && repeatDays.length === 0) {
-      validationErrors.push('Select at least one weekday for repeatable tasks');
+    let hasError = false;
+
+    // Title validation
+    if (!title.trim()) {
+      setTitleError('Title is required');
+      hasError = true;
+    } else {
+      setTitleError('');
     }
 
+    // Duration validation
     const finalDuration = useCustomDuration ? parseInt(customDuration, 10) : duration;
     if (useCustomDuration) {
-      if (isNaN(finalDuration) || finalDuration <= 0) {
-        validationErrors.push('Custom duration must be a positive number');
+      if (isNaN(finalDuration) || finalDuration < 5) {
+        setDurationError('Duration must be at least 5 minutes');
+        hasError = true;
       } else if (finalDuration % 5 !== 0) {
-        validationErrors.push('Duration must be a multiple of 5 minutes');
+        setDurationError('Duration must be a multiple of 5 minutes');
+        hasError = true;
+      } else {
+        setDurationError('');
       }
+    } else {
+      setDurationError('');
     }
 
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      return;
+    // Repeat days validation
+    if (repeatable && repeatDays.length === 0) {
+      setRepeatDaysError('Select at least one weekday');
+      hasError = true;
+    } else {
+      setRepeatDaysError('');
     }
+
+    if (hasError) return;
 
     const startTime = hour * 60 + minute;
     await addTask({
       title: title.trim(),
-      date: initialDate ?? getTodayISO(),
+      date: defaultDate,
       startTime,
       duration: finalDuration,
       hardness,
       repeatable,
       repeatDays: repeatable ? repeatDays : [],
-      source: initialSource ?? 'day',
+      source,
     });
 
-    handleClose();
-  }, [title, hour, minute, duration, customDuration, useCustomDuration, hardness, repeatable, repeatDays, addTask, handleClose]);
+    onClose();
+  }, [title, hour, minute, duration, customDuration, useCustomDuration, hardness, repeatable, repeatDays, addTask, onClose, defaultDate, source]);
 
   if (!isOpen) return null;
 
@@ -116,7 +127,7 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/60"
-        onClick={handleClose}
+        onClick={onClose}
         role="presentation"
       />
 
@@ -131,21 +142,13 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
           <h2 className="text-xl font-bold text-white">New Task</h2>
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             className="text-gray-400 hover:text-white text-2xl leading-none"
             aria-label="Close"
           >
             &times;
           </button>
         </div>
-
-        {errors.length > 0 && (
-          <div className="mb-4 p-3 rounded-lg bg-red-950/50 border border-red-800 text-red-300 text-sm">
-            {errors.map((e, i) => (
-              <p key={i}>{e}</p>
-            ))}
-          </div>
-        )}
 
         {/* Title */}
         <div className="mb-4">
@@ -156,10 +159,18 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
             id="task-title"
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (e.target.value.trim()) setTitleError('');
+            }}
             placeholder="What do you need to do?"
-            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+            className={`w-full px-3 py-2 rounded-lg bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
+              titleError ? 'border-red-500' : 'border-gray-700'
+            }`}
           />
+          {titleError && (
+            <p className="mt-1 text-sm text-red-400">{titleError}</p>
+          )}
         </div>
 
         {/* Start Time */}
@@ -208,7 +219,7 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
                 className="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
                 aria-label="Duration in minutes"
               >
-                {DURATION_OPTIONS.map((d) => (
+                {DURATION_PRESETS.map((d) => (
                   <option key={d} value={d}>
                     {d >= 60 ? `${d / 60}h${d % 60 ? ` ${d % 60}m` : ''}` : `${d}m`}
                   </option>
@@ -227,11 +238,16 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
               <input
                 type="number"
                 value={customDuration}
-                onChange={(e) => setCustomDuration(e.target.value)}
+                onChange={(e) => {
+                  setCustomDuration(e.target.value);
+                  setDurationError('');
+                }}
                 placeholder="Minutes"
                 min={5}
                 step={5}
-                className="w-24 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                className={`w-24 px-3 py-2 rounded-lg bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
+                  durationError ? 'border-red-500' : 'border-gray-700'
+                }`}
                 aria-label="Custom duration in minutes"
               />
               <span className="text-sm text-gray-400">min</span>
@@ -240,12 +256,16 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
                 onClick={() => {
                   setUseCustomDuration(false);
                   setCustomDuration('');
+                  setDurationError('');
                 }}
                 className="text-xs text-blue-400 hover:text-blue-300"
               >
                 Presets
               </button>
             </div>
+          )}
+          {durationError && (
+            <p className="mt-1 text-sm text-red-400">{durationError}</p>
           )}
         </div>
 
@@ -282,7 +302,10 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
               type="button"
               role="switch"
               aria-checked={repeatable}
-              onClick={() => setRepeatable(!repeatable)}
+              onClick={() => {
+                setRepeatable(!repeatable);
+                setRepeatDaysError('');
+              }}
               className={`relative w-11 h-6 rounded-full transition-colors ${
                 repeatable ? 'bg-blue-600' : 'bg-gray-700'
               }`}
@@ -295,22 +318,27 @@ export default function AddTaskModal({ isOpen, onClose, initialDate, initialSour
             </button>
           </div>
           {repeatable && (
-            <div className="flex gap-1.5">
-              {WEEKDAYS.map((day) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => toggleDay(day)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                    repeatDays.includes(day)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-800 text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="flex gap-1.5">
+                {WEEKDAYS.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      repeatDays.includes(day)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+              {repeatDaysError && (
+                <p className="mt-1 text-sm text-red-400">{repeatDaysError}</p>
+              )}
+            </>
           )}
         </div>
 

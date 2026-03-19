@@ -7,7 +7,7 @@ import {
   formatDateISO,
   getTodayISO,
 } from '../utils';
-import AddTaskModal from '../components/AddTaskModal';
+import TaskFormModal from '../components/TaskFormModal';
 import WeekTaskCard from '../components/WeekTaskCard';
 
 const MONTH_NAMES_SHORT = [
@@ -33,7 +33,7 @@ function formatWeekRange(dates: Date[]): string {
 export default function WeekPage() {
   const { tasks, isLoading } = useStore();
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalDate, setModalDate] = useState<string | undefined>();
+  const [modalDate, setModalDate] = useState(getTodayISO());
 
   const weekDates = useMemo(() => getCurrentWeekDates(), []);
   const todayISO = getTodayISO();
@@ -55,7 +55,6 @@ export default function WeekPage() {
 
   const closeModal = () => {
     setModalOpen(false);
-    setModalDate(undefined);
   };
 
   if (isLoading) {
@@ -148,11 +147,11 @@ export default function WeekPage() {
       </div>
 
       {/* Add Task Modal */}
-      <AddTaskModal
+      <TaskFormModal
         isOpen={modalOpen}
         onClose={closeModal}
-        initialDate={modalDate}
-        initialSource="week"
+        defaultDate={modalDate}
+        source="week"
       />
     </div>
   );
