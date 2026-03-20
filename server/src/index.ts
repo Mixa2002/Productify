@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import prisma from "./prisma.js";
 import authRoutes from "./routes/auth.js";
+import taskRoutes from "./routes/tasks.js";
+import habitRoutes from "./routes/habits.js";
 import { authenticate } from "./middleware/auth.js";
 
 dotenv.config();
@@ -25,6 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api", authenticate);
 
 // Protected routes go below this line
+app.use("/api/tasks", taskRoutes);
+app.use("/api/habits", habitRoutes);
 
 async function main() {
   await prisma.$connect();
