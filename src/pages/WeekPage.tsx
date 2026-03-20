@@ -5,18 +5,10 @@ import {
   getWeekDayName,
   getTasksForDate,
   formatDateISO,
-  formatTime,
   getTodayISO,
 } from '../utils';
 import TaskFormModal from '../components/TaskFormModal';
 import WeekTaskCard from '../components/WeekTaskCard';
-
-const WEEK_GRID_START = 360; // 6 AM in minutes
-const WEEK_GRID_END = 1320;  // 10 PM in minutes
-const WEEK_HOURS: number[] = [];
-for (let m = WEEK_GRID_START; m <= WEEK_GRID_END; m += 60) {
-  WEEK_HOURS.push(m);
-}
 
 const MONTH_NAMES_SHORT = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -32,9 +24,6 @@ function formatWeekRange(dates: Date[]): string {
   const endDay = last.getDate();
   const year = last.getFullYear();
 
-  if (first.getMonth() === last.getMonth()) {
-    return `${startMonth} ${startDay} \u2013 ${endMonth} ${endDay}, ${year}`;
-  }
   return `${startMonth} ${startDay} \u2013 ${endMonth} ${endDay}, ${year}`;
 }
 
@@ -75,100 +64,102 @@ export default function WeekPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-49px)]">
-      {/* Header */}
-      <div className="px-6 pt-4 pb-3">
+      {/* Week title */}
+      <div className="px-6 pt-4 pb-3 shrink-0">
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
           {formatWeekRange(weekDates)}
         </h1>
       </div>
 
-      {/* Day Columns */}
-      <div className="flex-1 overflow-x-auto overscroll-contain px-4 pb-4">
-        <div className="flex gap-2 min-w-max h-full">
-          {tasksByDay.map((day) => {
+      {/* Scrollable week grid */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 pb-4">
+        <div
+          className="flex h-full"
+          style={{ minWidth: `${7 * 150}px` }}
+        >
+          {tasksByDay.map((day, colIndex) => {
             const isToday = day.iso === todayISO;
+            const isLastColumn = colIndex === 6;
 
             return (
               <div
                 key={day.iso}
-                className={`flex flex-col ${isToday ? 'rounded-lg' : ''}`}
+                className="flex flex-col min-w-0 h-full"
                 style={{
-                  minWidth: '160px',
-                  width: '160px',
-                  ...(isToday ? { backgroundColor: 'rgba(162, 203, 139, 0.15)' } : {}),
+                  flex: '1 1 0%',
+                  minWidth: '150px',
+                  borderRight: isLastColumn ? 'none' : '1px solid var(--accent-pale)',
+                  backgroundColor: isToday ? 'rgba(162, 203, 139, 0.12)' : 'transparent',
                 }}
               >
-                {/* Column Header */}
+                {/* Sticky column header */}
                 <div
-                  className="flex items-center justify-between rounded-lg px-3 py-2 mb-2"
-                  style={
-                    isToday
-                      ? { backgroundColor: 'var(--accent)', color: '#ffffff' }
-                      : { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }
-                  }
+                  className="sticky top-0 z-10 px-2 pt-2 pb-2 shrink-0"
+                  style={{
+                    backgroundColor: isToday ? 'rgba(162, 203, 139, 0.12)' : 'var(--bg-app)',
+                  }}
                 >
-                  <div>
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: isToday ? '#ffffff' : 'var(--text-primary)' }}
-                    >
-                      {day.dayName}
-                    </span>
-                    <span
-                      className={`ml-1.5 text-sm ${isToday ? 'font-bold' : ''}`}
-                      style={{ color: isToday ? 'var(--accent-tint)' : 'var(--text-secondary)' }}
-                    >
-                      {day.dayNumber}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openModalForDate(day.iso)}
-                    className="w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center transition-colors"
-                    style={{
-                      backgroundColor: isToday ? 'rgba(255,255,255,0.25)' : 'var(--accent)',
-                      color: '#ffffff',
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = isToday ? 'rgba(255,255,255,0.35)' : 'var(--accent-light)')
+                  <div
+                    className="flex items-center justify-between rounded-lg px-3 py-2"
+                    style={
+                      isToday
+                        ? { backgroundColor: 'var(--accent)', color: '#ffffff' }
+                        : { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-light)' }
                     }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = isToday ? 'rgba(255,255,255,0.25)' : 'var(--accent)')
-                    }
-                    aria-label={`Add task for ${day.dayName} ${day.dayNumber}`}
                   >
-                    +
-                  </button>
+                    <div>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: isToday ? '#ffffff' : 'var(--text-primary)' }}
+                      >
+                        {day.dayName}
+                      </span>
+                      <span
+                        className={`ml-1.5 text-sm ${isToday ? 'font-bold' : ''}`}
+                        style={{ color: isToday ? 'var(--accent-tint)' : 'var(--text-secondary)' }}
+                      >
+                        {day.dayNumber}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openModalForDate(day.iso)}
+                      className="w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center transition-colors"
+                      style={{
+                        backgroundColor: isToday ? 'rgba(255,255,255,0.25)' : 'var(--accent)',
+                        color: '#ffffff',
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = isToday ? 'rgba(255,255,255,0.35)' : 'var(--accent-light)')
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = isToday ? 'rgba(255,255,255,0.25)' : 'var(--accent)')
+                      }
+                      aria-label={`Add task for ${day.dayName} ${day.dayNumber}`}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
 
-                {/* Tasks with hour markers */}
-                <div className="flex-1 overflow-y-auto pr-0.5 relative">
-                  {/* Hour marker lines */}
-                  {WEEK_HOURS.map((minute) => {
-                    const hourLabel = formatTime(minute);
-                    const showLabel = minute % 120 === 0; // label every 2 hours
-                    return (
-                      <div key={minute} className="flex items-center" style={{ height: '28px' }}>
-                        {showLabel && (
-                          <span className="text-[9px] w-full text-center select-none leading-none" style={{ color: 'var(--text-secondary)' }}>
-                            {hourLabel}
-                          </span>
-                        )}
-                        <div className="absolute left-0 right-0" style={{ borderTop: '1px solid rgba(199, 234, 187, 0.4)', pointerEvents: 'none' }} />
-                      </div>
-                    );
-                  })}
-
-                  {/* Task cards overlaid */}
-                  <div className="absolute inset-0 pt-0.5 overflow-y-auto">
-                    {day.tasks.map((task) => (
+                {/* Scrollable task list */}
+                <div className="flex-1 overflow-y-auto px-2 pb-2">
+                  {day.tasks.length === 0 ? (
+                    <p
+                      className="text-xs text-center pt-6 select-none"
+                      style={{ color: 'var(--text-secondary)', opacity: 0.6 }}
+                    >
+                      No tasks
+                    </p>
+                  ) : (
+                    day.tasks.map((task) => (
                       <WeekTaskCard
                         key={`${task.id}-${day.iso}`}
                         task={task}
                         dateISO={day.iso}
                       />
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </div>
               </div>
             );
