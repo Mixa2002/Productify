@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  tasks     Task[]
+  habits    Habit[]
+}
+
+model Task {
+  id          String           @id @default(uuid())
+  userId      String
+  title       String
+  date        String
+  startTime   Int
+  duration    Int
+  hardness    Int
+  repeatable  Boolean          @default(false)
+  repeatDays  String[]
+  source      String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions TaskCompletion[]
+
+  @@index([userId])
+  @@index([date])
+}
+
+model TaskCompletion {
+  id     String  @id @default(uuid())
+  taskId String
+  date   String
+  done   Boolean @default(true)
+  task   Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, date])
+  @@index([taskId])
+}
+
+model Habit {
+  id          String            @id @default(uuid())
+  userId      String
+  name        String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions HabitCompletion[]
+
+  @@index([userId])
+}
+
+model HabitCompletion {
+  id      String  @id @default(uuid())
+  habitId String
+  date    String
+  done    Boolean @default(true)
+  habit   Habit   @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([habitId])
+}
