@@ -54,7 +54,7 @@ export default function DayPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-49px)]">
+    <div className="flex flex-col page-content">
       {/* Header */}
       <div className="px-6 pt-4 pb-3">
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{formatHeaderDate(today)}</h1>
@@ -178,8 +178,8 @@ export default function DayPage() {
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-full text-white text-3xl shadow-lg flex items-center justify-center transition-colors hover-brighten"
-        style={{ backgroundColor: 'var(--accent)' }}
+        className="fixed right-6 z-20 w-14 h-14 rounded-full text-white text-3xl shadow-lg flex items-center justify-center transition-colors hover-brighten"
+        style={{ backgroundColor: 'var(--accent)', bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent-light)')}
         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent)')}
         aria-label="Add task"

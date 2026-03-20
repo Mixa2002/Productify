@@ -108,3 +108,10 @@
 .hardness-border-3 { border-left: 3px solid #84B179; }
 .hardness-border-4 { border-left: 3px solid #6B9960; }
 .hardness-border-5 { border-left: 3px solid #4A7A3D; }
+
+/* --- PWA safe area support --- */
+.page-content {
+  height: calc(100vh - 49px);
+  height: calc(100dvh - 49px - env(safe-area-inset-top, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

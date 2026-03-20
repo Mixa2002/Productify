@@ -183,7 +183,7 @@ export default function HabitsPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-49px)]">
+    <div className="flex flex-col page-content">
       {/* --- Today's Habits --- */}
       <div className="px-6 pt-4 pb-3">
         <div className="flex items-center justify-between mb-3">

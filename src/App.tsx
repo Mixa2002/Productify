@@ -63,7 +63,7 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
         {isAuthenticated && (
-          <nav className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--bg-nav)' }}>
+          <nav className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--bg-nav)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             <div className="max-w-2xl mx-auto flex items-center">
               <div className="flex flex-1">
                 {tabs.map((tab) => (

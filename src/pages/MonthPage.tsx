@@ -87,7 +87,7 @@ export default function MonthPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-49px)]">
+    <div className="flex flex-col page-content">
       {/* Header */}
       <div className="px-6 pt-4 pb-3">
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{monthLabel}</h1>

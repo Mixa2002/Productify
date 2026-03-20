@@ -1,4 +1,4 @@
-import type { Task, TaskCompletion, Habit, HabitCompletion } from "../generated/prisma/client.js";
+import type { Task, TaskCompletion, Habit, HabitCompletion } from "@prisma/client";
 
 type TaskWithCompletions = Task & { completions: TaskCompletion[] };
 type HabitWithCompletions = Habit & { completions: HabitCompletion[] };
