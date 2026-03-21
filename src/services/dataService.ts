@@ -1,4 +1,4 @@
-import type { Task, Habit } from '../types/index.ts';
+import type { Task, Habit, XpEvent } from '../types/index.ts';
 import { apiService } from './apiService.ts';
 
 export interface DataService {
@@ -11,6 +11,10 @@ export interface DataService {
   saveHabit(habit: Habit): Promise<Habit>;
   updateHabit(id: string, updates: Partial<Habit>): Promise<Habit>;
   deleteHabit(id: string): Promise<void>;
+
+  getXpEvents(): Promise<XpEvent[]>;
+  saveXpEvent(event: XpEvent): Promise<XpEvent>;
+  deleteXpEventsBySourceId(sourceId: string): Promise<void>;
 }
 
 export const dataService: DataService = apiService;

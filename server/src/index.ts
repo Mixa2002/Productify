@@ -6,6 +6,7 @@ import prisma from "./prisma.js";
 import authRoutes from "./routes/auth.js";
 import taskRoutes from "./routes/tasks.js";
 import habitRoutes from "./routes/habits.js";
+import xpRouter from "./routes/xp.js";
 import { authenticate } from "./middleware/auth.js";
 
 dotenv.config();
@@ -51,6 +52,7 @@ app.use("/api", authenticate);
 // Protected routes go below this line
 app.use("/api/tasks", taskRoutes);
 app.use("/api/habits", habitRoutes);
+app.use("/api/xp", xpRouter);
 
 async function main() {
   await prisma.$connect();

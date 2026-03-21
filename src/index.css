@@ -16,6 +16,10 @@
   --hardness-dark-2: #4A7A3D;
 }
 
+body {
+  background-color: #0D0D0D;
+}
+
 /* --- Modal animations --- */
 @keyframes slide-up {
   from {
@@ -109,9 +113,40 @@
 .hardness-border-4 { border-left: 3px solid #6B9960; }
 .hardness-border-5 { border-left: 3px solid #4A7A3D; }
 
+/* --- XP Level-up pulse --- */
+@keyframes level-pulse {
+  0% { transform: scale(1); text-shadow: none; }
+  40% { transform: scale(1.25); text-shadow: 0 0 16px rgba(245, 158, 11, 0.8); }
+  100% { transform: scale(1); text-shadow: none; }
+}
+
+.animate-level-pulse {
+  animation: level-pulse 1s ease-out;
+  display: inline-block;
+}
+
+/* --- Unlock toast slide in/out --- */
+@keyframes toast-in {
+  from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes toast-out {
+  from { transform: translateX(-50%) translateY(0); opacity: 1; }
+  to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.3s ease-out forwards;
+}
+
+.animate-toast-out {
+  animation: toast-out 0.3s ease-in forwards;
+}
+
 /* --- PWA safe area support --- */
 .page-content {
-  height: calc(100vh - 49px);
-  height: calc(100dvh - 49px - env(safe-area-inset-top, 0px));
+  height: calc(100vh - 93px);
+  height: calc(100dvh - 93px - env(safe-area-inset-top, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

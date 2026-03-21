@@ -2,6 +2,8 @@ import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { useStore } from './stores/useStore.ts';
 import { useAuthStore } from './stores/authStore.ts';
+import XpBanner from './components/XpBanner.tsx';
+import UnlockToast from './components/UnlockToast.tsx';
 
 const DayPage = lazy(() => import('./pages/DayPage.tsx'));
 const HabitsPage = lazy(() => import('./pages/HabitsPage.tsx'));
@@ -72,44 +74,48 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
         {isAuthenticated && (
-          <nav className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--bg-nav)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            <div className="max-w-2xl mx-auto flex items-center">
-              <div className="flex flex-1">
-                {tabs.map((tab) => (
-                  <NavLink
-                    key={tab.path}
-                    to={tab.path}
-                    className={({ isActive }) =>
-                      `flex-1 text-center py-3 text-sm font-medium transition-colors ${
+          <>
+            <nav className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--bg-nav)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+              <div className="max-w-2xl mx-auto flex items-center">
+                <div className="flex flex-1">
+                  {tabs.map((tab) => (
+                    <NavLink
+                      key={tab.path}
+                      to={tab.path}
+                      className={({ isActive }) =>
+                        `flex-1 text-center py-3 text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'border-b-2 font-bold'
+                            : 'opacity-80 hover:opacity-100'
+                        }`
+                      }
+                      style={({ isActive }) =>
                         isActive
-                          ? 'border-b-2 font-bold'
-                          : 'opacity-80 hover:opacity-100'
-                      }`
-                    }
-                    style={({ isActive }) =>
-                      isActive
-                        ? { color: '#ffffff', borderBottomColor: 'var(--accent-tint)' }
-                        : { color: 'var(--accent-tint)' }
-                    }
-                  >
-                    {tab.label}
-                  </NavLink>
-                ))}
+                          ? { color: '#ffffff', borderBottomColor: 'var(--accent-tint)' }
+                          : { color: 'var(--accent-tint)' }
+                      }
+                    >
+                      {tab.label}
+                    </NavLink>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="px-3 py-1.5 mr-2 text-xs font-medium rounded-md transition-colors"
+                  style={{ color: 'var(--accent-tint)', backgroundColor: 'rgba(255,255,255,0.15)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'; }}
+                  aria-label={`Sign out ${user?.name ?? ''}`}
+                  title={user?.name ?? 'Sign out'}
+                >
+                  Sign out
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={logout}
-                className="px-3 py-1.5 mr-2 text-xs font-medium rounded-md transition-colors"
-                style={{ color: 'var(--accent-tint)', backgroundColor: 'rgba(255,255,255,0.15)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'; }}
-                aria-label={`Sign out ${user?.name ?? ''}`}
-                title={user?.name ?? 'Sign out'}
-              >
-                Sign out
-              </button>
-            </div>
-          </nav>
+            </nav>
+            <XpBanner />
+            <UnlockToast />
+          </>
         )}
 
         <AppRoutes />

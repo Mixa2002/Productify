@@ -1,5 +1,4 @@
-import type { Task, Habit } from '../types/index.ts';
-import type { DataService } from './dataService.ts';
+import type { Task, Habit, XpEvent } from '../types/index.ts';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
@@ -44,7 +43,7 @@ const habitCompletionsCache = new Map<string, Record<string, boolean>>();
 
 // --- API Service ---
 
-export const apiService: DataService = {
+export const apiService = {
   // ---------- Tasks ----------
 
   async getTasks(): Promise<Task[]> {
@@ -211,5 +210,34 @@ export const apiService: DataService = {
     });
     await handleResponse<void>(res);
     habitCompletionsCache.delete(id);
+  },
+
+  // ---------- XP Events ----------
+
+  async getXpEvents(): Promise<XpEvent[]> {
+    const res = await fetch(`${API_URL}/xp/events`, { headers: authHeaders() });
+    return handleResponse<XpEvent[]>(res);
+  },
+
+  async saveXpEvent(event: XpEvent): Promise<XpEvent> {
+    const res = await fetch(`${API_URL}/xp/events`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        date: event.date,
+        source: event.source,
+        sourceId: event.sourceId,
+        amount: event.amount,
+      }),
+    });
+    return handleResponse<XpEvent>(res);
+  },
+
+  async deleteXpEventsBySourceId(sourceId: string): Promise<void> {
+    const res = await fetch(`${API_URL}/xp/events?sourceId=${encodeURIComponent(sourceId)}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    await handleResponse<void>(res);
   },
 };

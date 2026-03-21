@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useStore } from '../stores/useStore.ts';
-import { formatTime } from '../utils/index.ts';
+import { formatTime, getTasksForDate } from '../utils/index.ts';
+import { getTotalXP, getLevelFromXP, getCapsForLevel, getUnlockTiers } from '../utils/xp.ts';
 
 const DURATION_PRESETS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 90, 120, 150, 180];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -26,6 +27,24 @@ interface TaskFormModalProps {
 
 export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: TaskFormModalProps) {
   const addTask = useStore((s) => s.addTask);
+  const tasks = useStore((s) => s.tasks);
+  const xpEvents = useStore((s) => s.xpEvents);
+
+  const capInfo = useMemo(() => {
+    const level = getLevelFromXP(getTotalXP(xpEvents));
+    const caps = getCapsForLevel(level);
+    const dateObj = new Date(defaultDate + 'T00:00:00');
+    const taskCount = getTasksForDate(tasks, dateObj).length;
+    const atCap = taskCount >= caps.taskCap;
+
+    // Find next tier where taskCap is higher than current
+    const tiers = getUnlockTiers();
+    const currentTaskCap = caps.taskCap;
+    const nextTaskTier = tiers.find((t) => t.level > level && t.taskCap > currentTaskCap);
+    const atFinalCap = currentTaskCap >= 14;
+
+    return { taskCount, taskCap: caps.taskCap, atCap, nextTaskTier, atFinalCap };
+  }, [xpEvents, tasks, defaultDate]);
 
   const [title, setTitle] = useState('');
   const [hour, setHour] = useState(9);
@@ -125,7 +144,14 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
         aria-label="Add new task"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>New Task</h2>
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            New Task
+            {!capInfo.atCap && capInfo.taskCap - capInfo.taskCount <= 2 && (
+              <span className="ml-2 text-sm font-normal" style={{ color: 'var(--text-secondary)' }}>
+                ({capInfo.taskCount}/{capInfo.taskCap})
+              </span>
+            )}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -138,6 +164,17 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
             &times;
           </button>
         </div>
+
+        {capInfo.atCap && (
+          <div
+            className="mb-4 p-3 rounded-lg text-sm"
+            style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' }}
+          >
+            {capInfo.atFinalCap
+              ? `Maximum daily task slots reached (${capInfo.taskCount}/${capInfo.taskCap})`
+              : `Daily task limit reached (${capInfo.taskCount}/${capInfo.taskCap}). Reach Level ${capInfo.nextTaskTier!.level} to unlock ${capInfo.nextTaskTier!.description}.`}
+          </div>
+        )}
 
         {/* Title */}
         <div className="mb-4">
@@ -153,7 +190,8 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
               if (e.target.value.trim()) setTitleError('');
             }}
             placeholder="What do you need to do?"
-            className="w-full px-3 py-2 rounded-lg border focus:outline-none"
+            disabled={capInfo.atCap}
+            className="w-full px-3 py-2 rounded-lg border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: '#ffffff',
               borderColor: titleError ? '#dc2626' : 'var(--border-light)',
@@ -175,7 +213,8 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
             <select
               value={hour}
               onChange={(e) => setHour(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg border focus:outline-none"
+              disabled={capInfo.atCap}
+              className="px-3 py-2 rounded-lg border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#ffffff', borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
               onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
               onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border-light)')}
@@ -191,7 +230,8 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
             <select
               value={minute}
               onChange={(e) => setMinute(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg border focus:outline-none"
+              disabled={capInfo.atCap}
+              className="px-3 py-2 rounded-lg border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#ffffff', borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
               onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
               onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border-light)')}
@@ -215,7 +255,8 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
           <select
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
-            className="px-3 py-2 rounded-lg border focus:outline-none"
+            disabled={capInfo.atCap}
+            className="px-3 py-2 rounded-lg border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#ffffff', borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
             onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
             onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border-light)')}
@@ -240,7 +281,8 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
                 key={level}
                 type="button"
                 onClick={() => setHardness(level)}
-                className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                disabled={capInfo.atCap}
+                className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={
                   level === hardness
                     ? { backgroundColor: 'var(--accent)', color: '#ffffff' }
@@ -266,11 +308,12 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
               type="button"
               role="switch"
               aria-checked={repeatable}
+              disabled={capInfo.atCap}
               onClick={() => {
                 setRepeatable(!repeatable);
                 setRepeatDaysError('');
               }}
-              className="relative w-11 h-6 rounded-full transition-colors"
+              className="relative w-11 h-6 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: repeatable ? 'var(--accent)' : 'var(--border-light)' }}
             >
               <span
@@ -307,17 +350,19 @@ export default function TaskFormModal({ isOpen, onClose, defaultDate, source }: 
         </div>
 
         {/* Submit */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="w-full py-3 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: 'var(--accent)' }}
-          onMouseEnter={(e) => { if (!isSubmitting) e.currentTarget.style.backgroundColor = 'var(--accent-light)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--accent)'; }}
-        >
-          {isSubmitting ? 'Adding...' : 'Add Task'}
-        </button>
+        {!capInfo.atCap && (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full py-3 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: 'var(--accent)' }}
+            onMouseEnter={(e) => { if (!isSubmitting) e.currentTarget.style.backgroundColor = 'var(--accent-light)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--accent)'; }}
+          >
+            {isSubmitting ? 'Adding...' : 'Add Task'}
+          </button>
+        )}
       </div>
     </div>
   );
